@@ -1,0 +1,170 @@
+---
+title: 'Sample Case: Olympic Badminton'
+author: "Win Nawat"
+date: "7/31/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set
+```
+
+```{r imports, echo=FALSE}
+library(ggplot2)
+```
+
+## Using Statistics To Conclude Which Team Is Better
+
+At which point does winning a sport match becomes more about luck than skill? Making 1-2 mistakes too many at a critical point of a game can make a difference between Olympic gold and silver medals. Thus, watching Tokyo Olympic Games made me curious, **are gold medalists really better than silver or bronze medalists?** If so, how can we prove/test that?
+
+## The Plan
+The rough idea is to view each point in the match as a Bernoulli trial with the probability of team A winning the point as $p$ while that of team B is $(1-p)$.
+
+The distribution of the total score of each team in a match can then be modeled using binomial distribution. Having observed scores as a distribution allows for further hypothesis testing.
+
+### Hypothesis Testing
+The next step will then be performing a binomial test on the total score of each team in the game. In this case, the $H_{0}$ is $p = 0.5$ or claiming that both teams are equally good. The $H_1$ is thus $p \neq 0.5$ or claiming that one team being better than the other.
+
+The binomial test is equivalent to checking the probability of having the match score value be equal or more extreme than the value observed given that $p = 0.5$ or $$P(observation|p=0.5)$$
+
+And if this probability is less than the threshold, we cannot reject the hypothesis that $p=0.5$
+As for the threshold, some reasonable number such as 20% would suffice. This would be equivalent to stating that we can afford to falsely crown one team as the winner 20% of the time despite both teams being equally good.
+
+### Assumptions
+1. Both teams play their best for evey single point, regardless of the point difference or the set they play in.
+2. The probability of winning a point is constant throughout the game even as both teams get more exhausted.
+
+
+## A Really Close Game
+
+I will first pick one match to work on before trying to extend the idea to other matches.
+
+The sample match used here is: https://olympics.com/tokyo-2020/olympic-games/en/results/badminton/results-mixed-doubles-fnl-000100-.htm
+
+This is a badminton Mixed Doubles Gold Medal Match where the scores and competitors are:
+
+
+```{r scores CHN}
+data.frame(
+  "team" = c("A", "B"),
+  "origin" = c("CHN", "CHN"),
+  "player_name" = c("ZHENG Si Wei, HUANG Ya Qiong", "WANG Yi Lyu, HUANG Dong Ping"),
+  "match" = c(1,2),
+  "game_1" = c(17,21),
+  "game_2" = c(21,17),
+  "game_3" = c(19,21)
+)
+```
+Team A's total score is $17+21+19 = 57$
+Team B's total score is $21+17+21 = 59$
+A total of $116$ points were played.
+
+
+```{r probabilities, echo=TRUE}
+a_score <- 57
+b_score <- 59
+total_score <- 116
+a_p <- 57/116
+a_b <- 59/116
+```
+
+## Binomial Distribution
+Binomial distribution models the number of observed positive outcome given the probability and number of trials. Simulating 10 samples of 116 trials using `0.5` as the probability. These are the score we expect to see if the two teams which are equally good played 10 matches against each other.
+
+```{r a binom}
+rbinom(10,116,0.5)
+```
+### Simulation
+
+Simulating 500 matches. The red dotted line denotes the frequency that we observe team A scoring 57 points. We can see that the observed 57 points is quite close to the center of the distribution.
+
+```{r a binom plot}
+binom_sim <- rbinom(500,116,0.5)
+max_binom_sim <- max(binom_sim)
+min_binom_sim <- min(binom_sim)
+plot <- ggplot() +
+  aes(binom_sim) +
+  geom_bar() +
+  scale_x_continuous(breaks = seq(min_binom_sim,max_binom_sim,2)) +
+  geom_vline(xintercept = 57, linetype="dashed", color = "red")
+plot
+```
+
+### CDF
+Next, we calculate the probability of observing team A getting 57 points or less.
+$$P(X \leq 57)$$
+which is
+$$ \sum_{i=0}^{57}\binom{116}{i}p^{i}(1-p)^{116-i}) $$
+
+which is
+```{r cdf}
+pbinom(57, 116, 0.5)
+```
+
+This means that we have ~0.46 probability of observing such a score (57 to 59 over 3 sets) if the two teams are equally good.
+
+#### Visualizing The Results
+
+
+#### Verifying with R's built in binomial test
+
+```{r test}
+binom.test(57, 116, 0.5, alternative = "less")
+```
+
+## Another Game
+
+The sample match used here is: https://olympics.com/tokyo-2020/olympic-games/en/results/badminton/results-men-s-doubles-qfnl-000100-.htm
+
+This is a badminton Men's Doubles Quarterfinal Match where the scores and competitors are:
+
+```{r scores INA MAS}
+data.frame(
+  "team" = c("A", "B"),
+  "origin" = c("INA", "MAS"),
+  "player_name" = c("GIDEON Marcus Fernaldi, SUKAMULJO Kevin Sanjaya", "CHIA Aaron, SOH Wooi Yik"),
+  "match" = c(0,2),
+  "game_1" = c(14,21),
+  "game_2" = c(17,21)
+)
+```
+### Simulation
+
+Simulating 500 matches. The red dotted line denotes the frequency that we observe team A scoring 14 + 17 = 31 points out of 73 points played. We can see that the observed 31 points is further to the left than the previous example.
+
+```{r a binom plot INA MAS}
+binom_sim <- rbinom(500,73,0.5)
+max_binom_sim <- max(binom_sim)
+min_binom_sim <- min(binom_sim)
+plot <- ggplot() +
+  aes(binom_sim) +
+  geom_bar() +
+  scale_x_continuous(breaks = seq(min_binom_sim,max_binom_sim,2)) +
+  geom_vline(xintercept = 31, linetype="dashed", color = "red")
+plot
+```
+
+### CDF
+
+Now we look at the probability of observing team A getting 31 points or less if they played 73 points and the two teams are equally good.
+
+```{r cdf INA MAS}
+pbinom(31, 73, 0.5)
+```
+This is less than our threshold of 20% and we can confidently say that team B is better than team A in this match.
+
+### Plotting the PDF
+```{r plotting PDF, echo=FALSE}
+binom_pdf <- dbinom(seq(13,63,1), 73, 0.5)
+plot <- ggplot() +
+  aes(seq(13,63,1),binom_pdf) +
+  geom_line() +
+  geom_vline(xintercept = 31, linetype="dashed", color = "red") +
+  geom_polygon(aes(c(seq(13,31,1), seq(31,31, length.out=32))), fill='red', alpha=0.3) +
+  labs(title = "Probability density function of team A's scoring 31 points or less", subtitle = "Assuming they are equally good", x="observed points")
+plot
+```
+
+# How Many Points Should They Play?
+
+In this section we discuss a follow up question of coming up with the appropriate amount of points to be played within a game to be effective at discerning which team is better.
