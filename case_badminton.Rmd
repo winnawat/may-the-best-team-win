@@ -86,7 +86,9 @@ plot <- ggplot() +
   aes(binom_sim) +
   geom_bar() +
   scale_x_continuous(breaks = seq(min_binom_sim,max_binom_sim,2)) +
-  geom_vline(xintercept = 57, linetype="dashed", color = "red")
+  geom_vline(xintercept = 57, linetype="dashed", color = "red") +
+  labs(title = "Histogram of Counts of Simulated Score Observed", subtitle = "Assuming they are equally good", x="observed points")
+ggsave("figures/chn_chn_hist.png", width = 12, height = 8) 
 plot
 ```
 
@@ -140,7 +142,9 @@ plot <- ggplot() +
   aes(binom_sim) +
   geom_bar() +
   scale_x_continuous(breaks = seq(min_binom_sim,max_binom_sim,2)) +
-  geom_vline(xintercept = 31, linetype="dashed", color = "red")
+  geom_vline(xintercept = 31, linetype="dashed", color = "red") +
+  labs(title = "Histogram of Counts of Simulated Score Observed", subtitle = "Assuming they are equally good", x="observed points")
+ggsave("figures/ina_mas_hist.png", width = 12, height = 8) 
 plot
 ```
 
@@ -162,6 +166,7 @@ plot <- ggplot() +
   geom_vline(xintercept = 31, linetype="dashed", color = "red") +
   geom_polygon(aes(c(seq(13,31,1), seq(31,31, length.out=32))), fill='red', alpha=0.3) +
   labs(title = "Probability density function of team A's scoring 31 points or less", subtitle = "Assuming they are equally good", x="observed points")
+ggsave("figures/ina_mas_pdf.png", width = 12, height = 8) 
 plot
 ```
 
